@@ -15,6 +15,7 @@ https://visualgdb.com/gdbreference/commands/
 * break - add breakpoint
 * clear - remove breakpoint
 * backtrace - show call stack
+* run < input - cat `input` file to stdin
 
 ## layout
 
@@ -39,11 +40,14 @@ https://visualgdb.com/gdbreference/commands/
 
 ## print
 
+#### commands
+
 * `print [/f] [expr]` - print value
 * `p /x $eax`
 * `x /nf addr` - print value under address
 * `x/100x $sp` - print stack
 
+#### format 
 
 * x - hexadecimal
 * d - signed decimal
@@ -53,6 +57,8 @@ https://visualgdb.com/gdbreference/commands/
 * a - address
 * c - character
 * f - floating point
+
+#### extra modifiers
 
 * n - how many elements
 * u - size of a single element (b=1, h=2, w=4, g=8) (if format without size used, like x)
@@ -182,6 +188,8 @@ https://itanium-cxx-abi.github.io/cxx-abi/abi.html#mangling
 
 * jmp 
 
+#### conditional jumps
+
 * ja - above (CF=0 and ZF=0)
 * jae - above or equal (CF=0)
 * jb - below (CF=1)
@@ -212,6 +220,13 @@ https://itanium-cxx-abi.github.io/cxx-abi/abi.html#mangling
 * jnp - not parity (PF=0)
 * jns - not sign (SF=0)
 * jnz - not zero (ZF=0)
+
+#### cmp
+
+* cmp a, b
+* jl => a < b
+* above/below for unsigned
+* greater/less for signed
 
 # sources 
 
