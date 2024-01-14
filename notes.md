@@ -12,8 +12,9 @@ https://visualgdb.com/gdbreference/commands/
 * si - step into function
 * finish - execute until function returns
 * cont - execute until breakpoint
-* break - add breakpoint
+* break - add breakpoint/list breakpoints if without args
 * clear - remove breakpoint
+* delete - remove breakpoint by nr
 * backtrace - show call stack
 * run < input - cat `input` file to stdin
 
@@ -70,7 +71,10 @@ https://visualgdb.com/gdbreference/commands/
 
 # nasm 
 
-`.label` - label local to the closest previous label (with one dot less)
+* `.label` - label local to the closest previous label (with one dot less)
+* `global` - declare exported symbols
+* `extern` - declare external symbols
+* `section .text` - name a section
 
 ## macros
 
@@ -78,9 +82,15 @@ https://visualgdb.com/gdbreference/commands/
 * `%define name(arg) arg*2` - creates a parametrized macro, `arg` argument from macro call will be substituted in macro value
 * `%include "file"` - replaced with contents of `file`
 
+## data
+
+* `name size data` 
+* size - db, dw, dd, dq...
+
 # abi64
 
 http://www.nasm.us/links/unix64abi
+https://gitlab.com/x86-psABIs/x86-64-ABI
 
 * integer or pointer args - rdi, rsi, rdx, rcx, r8, r9
 * float args - xmm0...xmm7
@@ -89,15 +99,13 @@ http://www.nasm.us/links/unix64abi
 * rbx, rbp, rsp, r12, r13, r14, r15 have to stay unchanged after function call
 * result - rax,rdx for pointers and integers, xmm0/1 for floats
 
-## passing structs
+## structs
 
 * very complex
 * if the struct is passed by value and is small enough, individual fields will be passed by registers
 * pairs of fields may be packed into registers (ex. int and float, both 32bit, into rdi)
-
-## returning structs by value
-
-* pointer to space for the result is passed in rdi
+* it seems that constructors do not return valid data in rax
+* returning by value - pointer to space for the result is passed in rdi by the caller
 
 # g++/itanium-cxx name mangling
 
@@ -114,6 +122,15 @@ https://itanium-cxx-abi.github.io/cxx-abi/abi.html#mangling
 * repeating argument types are replaced with substitutions (except for scalar builtin types, not pointers)- referenced by S_, S0_...
 * operators have special, separate encoding and are not encoded as a function name
 * qualifiers - r (restrict), K (const), V (volatile)
+
+## constructors and destructors 
+
+* C1 - complete object constructor
+* C2 - base object constructor
+* C3 - complete object allocating constructor
+* D0 - deleting destructor
+* D1 - complete object destructor
+* D2 - base object destructor
 
 ## selected types
 
@@ -153,6 +170,8 @@ https://itanium-cxx-abi.github.io/cxx-abi/abi.html#mangling
 * mm - `--`
 * cl - `()`           
 * ix - `[]`
+* ls - `<<`
+* rs - `>>`
 
 ## examples
 
@@ -178,11 +197,26 @@ https://itanium-cxx-abi.github.io/cxx-abi/abi.html#mangling
 
 * r/m - either register or memory address
 
+## transfer
+
+* xchg r/m r
+* xchg r r/m
+
 ## arithmetic
 
-* add/sub r/m r/imm
-* add/sub r r/m
+* adc - add with carry
+* sbb - sub with borrow, also substracts carry flag
+* adc/add/sub/sbb r/m r/imm
+* adc/add/sub/sbb r r/m
 * mul r/m - unsigned multiply, rdx:rax = rax*r/m
+
+## binary operations
+
+* rol - rotate left
+* ror - rotate right
+* shl - shift left
+* shr - shift right
+* shl/shr/rol/ror r/m, imm8/cl 
 
 ## jumps
 
@@ -223,10 +257,59 @@ https://itanium-cxx-abi.github.io/cxx-abi/abi.html#mangling
 
 #### cmp
 
+* cmp r/m r/imm
+* cmp r r/m
 * cmp a, b
 * jl => a < b
 * above/below for unsigned
 * greater/less for signed
+
+## stack
+
+* push r/m
+* push imm
+* pop r/m
+
+## sse
+
+### basics
+
+* http://www.songho.ca/misc/sse/sse.html
+* https://www.officedaytime.com/simd512e/
+* s - scalar, p - packed 
+* s - single precision, d - double
+* ss - single precision scalar, ps - packed scalar
+* a - aligned, u - unaligned
+* instructions without aligned/unaligned versions seem to segfault on unaligned addresses
+
+### transfer
+
+#### scalar s/d move
+
+* vmovss xmm1 {w}, xmm2, xmm3 - merge from xmm2 and xmm3 to xmm1
+* movss xmm1 {w}/m32, xmm2 - move from xmm2 to xmm1 or memory
+* movss xmm1 {w}, m32 - move from memory to xmm1 
+* same with movsd, but m64
+* w - optional writemask TODO
+* movlps/movhps xmm1, m64 - move two packed single precision two lower/higher parts
+
+#### packed integer/s/d move
+
+* mov{a,u}ps xmm1, xmm2/m128 - move packed single precision values
+* mov{a,u}ps xmm1/m128, xmm2
+* movdq{a,u} xmm1, xmm2/m128 - move packed integer values
+* movdq{a,u} xmm1/m128, xmm2
+
+#### shuffle
+
+* shufps xmm1, xmm3/m128, imm8
+* movhlps xmm1, xmm2 - move high quadword of xmm2 to low quadword of xmm1
+
+### arithmetic
+
+* psubb/psubw/psubd xmm1, xmm2/m128- substract packed integers
+* subps/addps/mulps/divps xmm1, xmm2/m128 - sub/add/mul/div packed single precision
+* sqrtps xmm1, xmm2/m128 - compute sqrt of xmm2, save in xmm1
 
 # sources 
 
